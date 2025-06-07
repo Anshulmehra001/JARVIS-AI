@@ -1,0 +1,67 @@
+import os
+import pyttsx3
+import webbrowser
+import datetime
+import random
+import google.generativeai as genai
+
+# Initialize Gemini model
+genai.configure(api_key="yourAPIkey")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# Declare chatStr as a global variable
+chatStr = ""
+
+def chat(query):
+    global chatStr  # Declare chatStr as global to modify it
+    print(chatStr)
+    chatStr += f"Aniket: {query}\nJarvis: "
+    response = model.generate_content(chatStr)
+    response_text = response.text.strip()
+    say(response_text)
+    chatStr += f"{response_text}\n"
+    return response_text
+
+def say(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
+
+def takeCommand():
+    query = input("Please enter your command: ")
+    print(f"User said: {query}")
+    return query
+
+def open_application(path):
+    os.startfile(path)
+
+def clear_console():
+    os.system('cls')
+
+if __name__ == '__main__':
+    print('Welcome to Jarvis A.I')
+    say("")
+    while True:
+        print("Listening...")
+        query = takeCommand()
+        sites = [["youtube", "https://www.youtube.com"], ["wikipedia", "https://www.wikipedia.com"], ["google", "https://www.google.com"]]
+        for site in sites:
+            if f"Open {site[0]}".lower() in query.lower():
+                say(f"Opening {site[0]} sir...")
+                webbrowser.open(site[1])
+        if "open music" in query:
+            musicPath = ("C:/users/Aniket Mehra/Downloads/gorila-315977.mp3")
+            os.startfile(musicPath)
+        elif "the time" in query:
+            hour = datetime.datetime.now().strftime("%H")
+            min = datetime.datetime.now().strftime("%M")
+            say(f"Sir time is {hour} hours and {min} minutes")
+        elif "Using AI".lower() in query.lower():
+            chat(query)
+        elif "Jarvis Quit".lower() in query.lower():
+            exit()
+        elif "reset chat".lower() in query.lower():
+            chatStr = ""
+        else:
+            print("Chatting...")
+            chat(query)
