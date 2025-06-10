@@ -1,0 +1,96 @@
+import pyttsx3
+import datetime
+import wikipedia
+import webbrowser
+import os
+import datetime
+
+engine=pyttsx3.init('sapi5')
+voices=engine.getProperty('voices')
+
+# print(voices[2].id)
+
+
+# engine = pyttsx3.init()
+# voices = engine.getProperty('voices')
+
+# for index, voice in enumerate(voices):
+#     print(f"{index}: {voice.name} - {voice.id}")
+
+
+
+
+engine.setProperty('voice',voices[2].id)
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+ 
+def wishme():
+
+    hour =int(datetime.datetime.now().hour)
+    if hour>=0 and hour<12:
+        speak('good morning!')
+    elif hour>=12 and hour<18:
+        speak("good afternoon")
+    else:
+        speak("good evening")
+
+    speak('how can i help you?')
+    print('how can i help you?')
+
+
+def takeCommand():
+    query = input("Please enter your command: ")
+    print(f"User said: {query}")
+    return query
+
+
+if __name__=="__main__":
+# speak("hello welcome how can i help you")
+    wishme()
+    while True:
+         query=takeCommand().lower()
+
+         if 'wikipedia' in query:
+             speak('searching wikipedia..')
+             query = query.replace("wikipedia", "")
+             results = wikipedia.summary(query,sentences=2)
+             speak("according to wikipedia")
+             print(results)
+             speak(results)
+
+         elif'open youtube'in query:
+             webbrowser.open("https://youtube.com")
+
+
+         elif'open google'in query:
+            webbrowser.open("https://google.com")
+         elif'open stackoverflow'in query:
+             webbrowser.open("https://stackoverflo.com")
+         elif'open wikipedia'in query:
+           webbrowser.open("https://wikipedia.com")
+         elif'open youtube'in query:
+             webbrowser.open("https://youtube.com")
+         elif'open youtube'in query:
+             webbrowser.open("https://youtube.com")
+
+         elif'play music'in query:
+             music_dir='d:\\songs'
+             songs=os.listdir(music_dir)
+             print(songs)
+             os.startfile(os.path.join(music_dir,songs[0]))
+
+         elif 'the time'in query:
+             strTime= datetime.datetime.now().strftime("%H:%M:%S")
+             speak(f"the time is {strTime}")
+             print(f"the time is {strTime}")
+
+         elif 'hello'in query:
+             print("hello..... how are you?")
+             speak("hello how are you")
+         elif 'fine'in query:
+             print("good")
+             speak("good to see you")
+         else:
+             print("sorry I don't understand")
