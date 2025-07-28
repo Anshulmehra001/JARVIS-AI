@@ -1,0 +1,127 @@
+import os
+import datetime
+import webbrowser
+import wikipedia
+import pyttsx3
+import random
+from google import genai
+from google.genai.types import HttpOptions, GenerateContentConfig
+
+# Configuration
+ASSISTANT_NAME = "Gemini"
+os.environ["GEMINI_API_KEY"] = "YOUR API"  # Replace with your actual API key
+
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=HttpOptions(api_version="v1")
+)
+
+engine = pyttsx3.init('sapi5')
+voices = engine.getProperty('voices')
+if voices:
+    engine.setProperty('voice', voices[2].id)
+
+chat_history = ""
+
+def speak_print(text: str):
+    print(text)
+    try:
+        engine.say(text)
+        engine.runAndWait()
+    except Exception as e:
+        print("TTS error:", e)
+
+def wish_me():
+    hour = datetime.datetime.now().hour
+    greeting = "Good morning!" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+    speak_print(greeting)
+    speak_print("How can I help you?")
+
+def take_command() -> str:
+    try:
+        cmd = input("Please enter your command: ")
+        print("You said:", cmd)
+        return cmd.lower()
+    except Exception as e:
+        speak_print("Error reading your input.")
+        return ""
+
+def search_wikipedia(topic: str):
+    speak_print("Searching Wikipedia...")
+    topic = topic.strip()
+    if not topic:
+        speak_print("Please specify a topic to search.")
+        return
+    try:
+        summary = wikipedia.summary(topic, sentences=2, auto_suggest=False)
+        speak_print("According to Wikipedia:")
+        speak_print(summary)
+    except wikipedia.exceptions.DisambiguationError as e:
+        speak_print("That topic is ambiguous. Here are some options:")
+        for opt in e.options[:5]:
+            speak_print(opt)
+    except wikipedia.exceptions.PageError:
+        speak_print(f"No Wikipedia page found for '{topic}'.")
+    except Exception as e:
+        speak_print("Error during Wikipedia lookup.")
+        print("Wiki error:", e)
+
+def chat(query: str):
+    global chat_history
+    chat_history += f"You: {query}\n{ASSISTANT_NAME}: "
+    try:
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=chat_history,
+            config=GenerateContentConfig(temperature=0.7, max_output_tokens=300)
+        )
+        reply = resp.text.strip()
+    except Exception as e:
+        print("AI error:", e)
+        reply = "Sorry, I couldn't process that request."
+    chat_history += reply + "\n"
+    speak_print(reply)
+    return reply
+
+if __name__ == "__main__":
+    speak_print(f"Welcome! I am {ASSISTANT_NAME}")
+    wish_me()
+    while True:
+        cmd = take_command()
+        if not cmd:
+            continue
+        try:
+            if "wikipedia" in cmd:
+                search_wikipedia(cmd.replace("wikipedia", ""))
+            elif "open youtube" in cmd:
+                speak_print("Opening YouTube...")
+                webbrowser.open("https://www.youtube.com")
+            elif "open google" in cmd:
+                speak_print("Opening Google...")
+                webbrowser.open("https://www.google.com")
+            elif "open stackoverflow" in cmd:
+                speak_print("Opening StackOverflow...")
+                webbrowser.open("https://stackoverflow.com")
+            elif "play music" in cmd or "open music" in cmd:
+                speak_print("Playing music...")
+                path = r"C:/users/Aniket Mehra/Downloads/gorila-315977.mp3"
+                if os.path.exists(path):
+                    os.startfile(path)
+                else:
+                    speak_print("Music file not found.")
+            elif "the time" in cmd:
+                now = datetime.datetime.now().strftime("%H:%M:%S")
+                speak_print(f"The time is {now}")
+            elif ASSISTANT_NAME.lower() in cmd:
+                chat(cmd)
+            elif "reset chat" in cmd:
+                chat_history = ""
+                speak_print("Chat history cleared.")
+            elif f"{ASSISTANT_NAME.lower()} quit" in cmd or "exit" in cmd:
+                speak_print(f"Goodbye from {ASSISTANT_NAME}!")
+                break
+            else:
+                chat(cmd)
+        except Exception as e:
+            speak_print("An unexpected error occurred.")
+            print("Main loop error:", e)
